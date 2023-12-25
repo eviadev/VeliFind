@@ -27,8 +27,10 @@ services:
       - backend
     links:
       - mongo
+      - redis
     depends_on:
       - mongo
+      - redis
   mongo:
     image: mvertes/alpine-mongo
     container_name: mongo
@@ -36,7 +38,11 @@ services:
       - '27017:27017'
     networks:
       - backend
-
+  redis:
+    image: redis
+    container_name: redis
+    ports:
+      - '6379:6379'
 networks:
   backend:
     driver: bridge
