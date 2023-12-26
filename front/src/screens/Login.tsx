@@ -1,13 +1,12 @@
 import React from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from "react-native";
+import { View, Text, TextInput, StyleSheet } from "react-native";
 import useLogin from "../hooks/useLogin";
-
+import Button from "../components/Button";
 
 export const Login = () => {
   const {
     email,
     password,
-    loading,
     error,
     setEmail,
     setPassword,
@@ -17,21 +16,23 @@ export const Login = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={(text: string) => setEmail(text)}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry
-        value={password}
-        onChangeText={(text: string) => setPassword(text)}
-      />
-      <Button title="Login" onPress={handleLogin} disabled={loading} />
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      <View style={styles.loginForm}>
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          value={email}
+          onChangeText={(text: string) => setEmail(text)}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          secureTextEntry
+          value={password}
+          onChangeText={(text: string) => setPassword(text)}
+        />
+        <Button onPress={handleLogin}>Login</Button>
+        {error && <Text style={styles.errorText}>{error}</Text>}
+      </View>
     </View>
   );
 };
@@ -58,5 +59,10 @@ const styles = StyleSheet.create({
   errorText: {
     color: "red",
     marginTop: 8,
+  },
+  loginForm: {
+    display: "flex",
+    justifyContent: "center",
+    width: 300,
   },
 });

@@ -1,12 +1,12 @@
 import React from "react";
-import { View, Text, TextInput, Button, StyleSheet } from "react-native";
+import { View, Text, TextInput, StyleSheet } from "react-native";
 import useRegister from "../hooks/useRegister";
+import Button from "../components/Button";
 
 export const Register = () => {
   const {
     email,
     password,
-    loading,
     error,
     setEmail,
     setPassword,
@@ -16,21 +16,23 @@ export const Register = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Register</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={(text) => setEmail(text)}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry
-        value={password}
-        onChangeText={(text) => setPassword(text)}
-      />
-      <Button title="Register" onPress={handleRegister} disabled={loading} />
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      <View style={styles.registrationForm}>
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          value={email}
+          onChangeText={(text) => setEmail(text)}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          secureTextEntry
+          value={password}
+          onChangeText={(text) => setPassword(text)}
+        />
+        <Button onPress={handleRegister}>Register</Button>
+        {error && <Text style={styles.errorText}>{error}</Text>}
+      </View>
     </View>
   );
 };
@@ -57,5 +59,10 @@ const styles = StyleSheet.create({
   errorText: {
     color: "red",
     marginTop: 8,
+  },
+  registrationForm: {
+    display: "flex",
+    justifyContent: "center",
+    width: 300,
   },
 });

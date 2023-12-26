@@ -3,14 +3,18 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {navigationRef} from './utils';
 import {SCREENS} from './screens';
-import {Login} from '../screens/Login';
+import { Home } from "../screens/Home";
+import { Login } from "../screens/Login";
+import { Register } from "../screens/Register";
 
 const Stack = createNativeStackNavigator();
 
 const AppStack = () => {
   return (
-    <Stack.Navigator initialRouteName={SCREENS.LOGIN}>
+    <Stack.Navigator initialRouteName={SCREENS.HOME}>
+      <Stack.Screen name={SCREENS.HOME} component={Home} />
       <Stack.Screen name={SCREENS.LOGIN} component={Login} />
+      <Stack.Screen name={SCREENS.REGISTER} component={Register} />
     </Stack.Navigator>
   );
 };
@@ -19,7 +23,9 @@ const linking = {
   prefixes: [],
   config: {
     screens: {
-      [SCREENS.LOGIN]: 'login',
+      [SCREENS.HOME]: "",
+      [SCREENS.LOGIN]: "login",
+      [SCREENS.REGISTER]: "register",
     },
   },
 };
