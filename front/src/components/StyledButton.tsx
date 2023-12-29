@@ -1,7 +1,7 @@
 import React from "react";
 import {
   Text,
-  TouchableOpacity,
+  Pressable,
   StyleSheet,
   StyleProp,
   ViewStyle,
@@ -11,14 +11,13 @@ type ButtonProps = {
   onPress: () => void;
   style?: StyleProp<ViewStyle>;
   children?: React.ReactNode;
-  // title?: string;
 };
 
 const StyledButton: React.FC<ButtonProps> = ({ onPress, style, children }) => {
   return (
-    <TouchableOpacity style={[styles.button, style]} onPress={onPress}>
+    <Pressable style={[styles.button, style]} onPress={onPress}>
       <Text style={styles.buttonText}>{children}</Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 

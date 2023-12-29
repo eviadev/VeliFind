@@ -1,15 +1,17 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOM from "react-dom/client";
 import './index.css';
 import App from './App';
 import { AuthProvider } from "./Contexts/AuthContext";
+import reportWebVitals from "./reportWebVitals";
 
-ReactDOM.render(
+// eslint-disable-next-line no-undef
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(
   <React.StrictMode>
     <AuthProvider>
       <App />
     </AuthProvider>
   </React.StrictMode>,
-  // eslint-disable-next-line no-undef
-  document.getElementById("root"),
 );
+reportWebVitals();
