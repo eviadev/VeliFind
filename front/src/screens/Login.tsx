@@ -1,7 +1,7 @@
-import React, {useEffect, useState} from "react";
-import {View, Text, TextInput, StyleSheet} from "react-native";
-import {API_URL, useAuth} from "../Contexts/AuthContext";
+import { useEffect, useState } from "react";
+import { View, Text, TextInput, StyleSheet } from "react-native";
 import axios from "axios";
+import { API_URL, useAuth } from "../Contexts/AuthContext";
 import StyledButton from "../components/StyledButton";
 
 export const Login = ({ navigation }) => {
@@ -12,10 +12,10 @@ export const Login = ({ navigation }) => {
   useEffect(() => {
     const testCall = async () => {
       const result = await axios.get(`${API_URL}/users`);
-      console.log("testcall:", result)
-    }
-    testCall()
-  }, [])
+      console.log("testcall:", result);
+    };
+    testCall();
+  }, []);
 
   const login = async () => {
     const result = await onLogin!(email, password);
@@ -24,9 +24,8 @@ export const Login = ({ navigation }) => {
     }
   };
   const handleRedirect = () => {
-    navigation.navigate("Login");
+    navigation.navigate("Register", {login});
   };
-
 
   return (
     <View style={styles.container}>
@@ -47,8 +46,12 @@ export const Login = ({ navigation }) => {
         />
       </View>
       <View style={styles.buttonsDiv}>
-        <StyledButton onPress={login} style={styles.button}>Sign in</StyledButton>
-        <StyledButton onPress={handleRedirect} style={styles.button}>Create account</StyledButton>
+        <StyledButton onPress={handleRedirect} style={styles.button}>
+          Create account
+        </StyledButton>
+        <StyledButton onPress={login} style={styles.button}>
+          Sign in
+        </StyledButton>
       </View>
     </View>
   );
@@ -80,12 +83,13 @@ const styles = StyleSheet.create({
   formContainer: {
     display: "flex",
     justifyContent: "center",
-    width: 300,
+    width: 280,
   },
   button: {
-    color: "#fff"
+    color: "#fff",
   },
   buttonsDiv: {
-    gap: 15
-  }
+    gap: 15,
+    flexDirection: "row",
+  },
 });

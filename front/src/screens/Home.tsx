@@ -1,23 +1,6 @@
-import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { StackNavigationProp } from "@react-navigation/stack";
-import StyledButton from "../components/StyledButton";
 
-type RootStackParamList = {
-  Home: undefined;
-  Login: undefined;
-};
-
-type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, "Home">;
-
-type HomeProps = {
-  navigation: HomeScreenNavigationProp;
-};
-
-export const Home: React.FC<HomeProps> = ({ navigation }) => {
-  const handleRedirect = () => {
-    navigation.navigate("Login");
-  };
+export const Home: React.FC = () => {
 
   return (
     <View style={styles.container}>
@@ -36,7 +19,6 @@ export const Home: React.FC<HomeProps> = ({ navigation }) => {
           a key operator in public transportation.
         </Text>
       </View>
-      <StyledButton onPress={handleRedirect}>Login here</StyledButton>
     </View>
   );
 };

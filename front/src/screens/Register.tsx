@@ -1,9 +1,9 @@
-import React, {useEffect, useState} from "react";
-import {View, Text, TextInput, StyleSheet, Button} from "react-native";
-import axios from "axios";
-import {API_URL, useAuth} from "../Contexts/AuthContext";
+import { useState} from "react";
+import {View, Text, TextInput, StyleSheet} from "react-native";
+import { useAuth} from "../Contexts/AuthContext";
+import StyledButton from "../components/StyledButton";
 
-export const Register = () => {
+export const Register = ({ navigation }) => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const { onRegister } = useAuth();
@@ -15,17 +15,13 @@ export const Register = () => {
     }
   };
 
-  useEffect(() => {
-    const testCall = async () => {
-      const result = await axios.get(`${API_URL}/users`);
-      console.log("testcall:", result)
-    }
-    testCall()
-  }, [])
+  const handleRedirect = () => {
+    navigation.navigate("Login");
+  };
 
   return (
       <View style={styles.container}>
-        <Text style={styles.title}>Login</Text>
+        <Text style={styles.title}>Register</Text>
         <View style={styles.formContainer}>
           <TextInput
               style={styles.input}
@@ -40,7 +36,10 @@ export const Register = () => {
               value={password}
               onChangeText={(text: string) => setPassword(text)}
           />
-          <Button onPress={register} title="Create account" />
+          <View style={styles.buttonsDiv}>
+            <StyledButton onPress={handleRedirect} style={styles.button}>Sign in</StyledButton>
+            <StyledButton onPress={register} style={styles.button}>Create account</StyledButton>
+          </View>
         </View>
       </View>
   );
@@ -72,6 +71,13 @@ const styles = StyleSheet.create({
   formContainer: {
     display: "flex",
     justifyContent: "center",
-    width: 300,
+    width: 280,
   },
+  button: {
+    color: "#fff"
+  },
+  buttonsDiv: {
+    gap: 15,
+    flexDirection: "row"
+  }
 });

@@ -1,13 +1,13 @@
-import React from "react";
 import {
   SafeAreaProvider,
   initialWindowMetrics,
 } from "react-native-safe-area-context";
 import { Pressable } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { AuthProvider, useAuth } from "./Contexts/AuthContext";
 import { NavigationContainer } from "@react-navigation/native";
+import { AuthProvider, useAuth } from "./Contexts/AuthContext";
 import { Login } from "./screens/Login";
+import { Register } from "./screens/Register";
 import { Home } from "./screens/Home";
 
 const Stack = createNativeStackNavigator();
@@ -27,7 +27,7 @@ export const Layout = () => {
   const { authState, onLogout } = useAuth();
   return (
     <NavigationContainer>
-      <Stack.Navigator>
+      <Stack.Navigator initialRouteName={authState ? "Home" : "Login"}>
         {authState?.authenticated ? (
           <Stack.Screen
             name="Home"
@@ -47,7 +47,10 @@ export const Layout = () => {
             }}
           />
         ) : (
-          <Stack.Screen name="Login" component={Login} />
+          <>
+            <Stack.Screen name="Login" component={Login} options={{headerShown: false}} />
+            <Stack.Screen name="Register" component={Register} options={{headerShown: false}}/>
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>
