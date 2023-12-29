@@ -10,10 +10,11 @@ import {
 type ButtonProps = {
   onPress: () => void;
   style?: StyleProp<ViewStyle>;
-  children: React.ReactNode;
+  children?: React.ReactNode;
+  // title?: string;
 };
 
-const Button: React.FC<ButtonProps> = ({ onPress, style, children }) => {
+const StyledButton: React.FC<ButtonProps> = ({ onPress, style, children }) => {
   return (
     <TouchableOpacity style={[styles.button, style]} onPress={onPress}>
       <Text style={styles.buttonText}>{children}</Text>
@@ -30,8 +31,8 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     textAlign: "center",
-    fontWeight: "500",
+    fontWeight: "500"
   },
 });
 
-export default Button;
+export default StyledButton;
