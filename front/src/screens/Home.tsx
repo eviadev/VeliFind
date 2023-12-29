@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import Button from "../components/Button";
+import StyledButton from "../components/StyledButton";
 
 type RootStackParamList = {
   Home: undefined;
@@ -36,7 +36,7 @@ export const Home: React.FC<HomeProps> = ({ navigation }) => {
           a key operator in public transportation.
         </Text>
       </View>
-      <Button onPress={handleRedirect}>Login here</Button>
+      <StyledButton onPress={handleRedirect}>Login here</StyledButton>
     </View>
   );
 };

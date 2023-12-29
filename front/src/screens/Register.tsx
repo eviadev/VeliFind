@@ -1,39 +1,48 @@
-import React from "react";
-import { View, Text, TextInput, StyleSheet } from "react-native";
-import useRegister from "../hooks/useRegister";
-import Button from "../components/Button";
+import React, {useEffect, useState} from "react";
+import {View, Text, TextInput, StyleSheet, Button} from "react-native";
+import axios from "axios";
+import {API_URL, useAuth} from "../Contexts/AuthContext";
 
 export const Register = () => {
-  const {
-    email,
-    password,
-    error,
-    setEmail,
-    setPassword,
-    handleRegister,
-  } = useRegister();
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const { onRegister } = useAuth();
+
+  const register = async () => {
+    const result = await onRegister!(email, password);
+    if (result && result.error) {
+      alert(result.msg);
+    }
+  };
+
+  useEffect(() => {
+    const testCall = async () => {
+      const result = await axios.get(`${API_URL}/users`);
+      console.log("testcall:", result)
+    }
+    testCall()
+  }, [])
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Register</Text>
-      <View style={styles.registrationForm}>
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={(text) => setEmail(text)}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          secureTextEntry
-          value={password}
-          onChangeText={(text) => setPassword(text)}
-        />
-        <Button onPress={handleRegister}>Register</Button>
-        {error && <Text style={styles.errorText}>{error}</Text>}
+      <View style={styles.container}>
+        <Text style={styles.title}>Login</Text>
+        <View style={styles.formContainer}>
+          <TextInput
+              style={styles.input}
+              placeholder="Email"
+              value={email}
+              onChangeText={(text: string) => setEmail(text)}
+          />
+          <TextInput
+              style={styles.input}
+              placeholder="Password"
+              secureTextEntry
+              value={password}
+              onChangeText={(text: string) => setPassword(text)}
+          />
+          <Button onPress={register} title="Create account" />
+        </View>
       </View>
-    </View>
   );
 };
 
@@ -60,7 +69,7 @@ const styles = StyleSheet.create({
     color: "red",
     marginTop: 8,
   },
-  registrationForm: {
+  formContainer: {
     display: "flex",
     justifyContent: "center",
     width: 300,
