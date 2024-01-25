@@ -3,20 +3,14 @@ import {
   Text,
   Pressable,
   StyleSheet,
-  StyleProp,
-  ViewStyle,
 } from "react-native";
+import {ButtonProps} from "../types";
 
-type ButtonProps = {
-  onPress: () => void;
-  style?: StyleProp<ViewStyle>;
-  children?: React.ReactNode;
-};
 
 const StyledButton: React.FC<ButtonProps> = ({ onPress, style, children }) => {
   return (
     <Pressable style={[styles.button, style]} onPress={onPress}>
-      <Text style={styles.buttonText}>{children}</Text>
+      <Text style={styles.buttonStyle}>{children}</Text>
     </Pressable>
   );
 };
@@ -28,7 +22,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderRadius: 15,
   },
-  buttonText: {
+  buttonStyle: {
     textAlign: "center",
     fontWeight: "500"
   },

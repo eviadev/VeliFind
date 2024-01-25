@@ -60,25 +60,25 @@ export const AuthProvider = ({ children }: any) => {
   const login = async (email: string, password: string) => {
     try {
       const result = await axios.post(`${API_URL}/login`, { email, password });
-
+      console.log('Starting login process...');
       if (result && result.data && result.data.authToken) {
         setAuthState({
           token: result.data.authToken.token,
           authenticated: true,
         });
 
-        axios.defaults.headers.common["Authorization"] = `Bearer ${result.data.authToken.token}`;
+        axios.defaults.headers.common['Authorization'] = `Bearer ${result.data.authToken.token}`;
 
         try {
           await AsyncStorage.setItem(TOKEN_KEY, result.data.authToken.token);
         } catch (error) {
           console.error('Error saving token to AsyncStorage:', error);
         }
-
+        console.log('Login successful:', result);
         return result;
       } else {
         console.error("Login response is missing 'authToken' property:", result);
-        return { error: true, msg: "Invalid response from server during login." };
+        return { error: true, msg: 'Invalid response from server during login.' };
       }
     } catch (error) {
       console.error('Login Error:', error);

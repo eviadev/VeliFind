@@ -85,9 +85,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: 280,
   },
-  button: {
-    color: "#fff",
-  },
   buttonsDiv: {
     gap: 15,
     flexDirection: "row",

@@ -64,17 +64,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     padding: 8,
   },
-  errorText: {
-    color: "red",
-    marginTop: 8,
-  },
   formContainer: {
     display: "flex",
     justifyContent: "center",
     width: 280,
-  },
-  button: {
-    color: "#fff"
   },
   buttonsDiv: {
     gap: 15,
