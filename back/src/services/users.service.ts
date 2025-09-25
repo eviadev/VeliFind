@@ -6,6 +6,8 @@ import userModel from '@models/users.model';
 import { isEmpty } from '@utils/util';
 
 class UserService {
+  public users = userModel;
+
   public async findAllUser(): Promise<User[]> {
     const users: User[] = await userModel.find();
     return users;
@@ -45,7 +47,7 @@ class UserService {
       userData = { ...userData, password: hashedPassword };
     }
 
-    const updateUserById: User = await userModel.findByIdAndUpdate(userId, { userData });
+    const updateUserById: User = await userModel.findByIdAndUpdate(userId, { $set: userData }, { new: true });
     if (!updateUserById) throw new HttpException(409, "User doesn't exist");
 
     return updateUserById;

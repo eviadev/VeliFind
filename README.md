@@ -1,69 +1,122 @@
-# ℹ️ Introduction
+# VeliFind
 
-### How to submit the exercice ?
+VeliFind is a full-stack Velib companion that helps riders check bike availability across Paris. The project combines a REST API (Node.js/Express/MongoDB/Redis) with a React Native Web client so users can register, authenticate, and browse stations from any browser.
 
-**1.** Create your **private** repo by using this repository as template.
+## Features
+- Email/password authentication with token-based sessions
+- Periodic ingestion of Velib open data to refresh station availability
+- Search, filter, and pagination helpers to quickly find the right dock
+- Shared TypeScript domain models between API and client
+- React Native Web UI that also targets iOS/Android with the same components
 
-<img width="750" alt="Screenshot 2022-08-02 at 20 46 19" src="https://user-images.githubusercontent.com/20050165/182450543-33f96cf9-81f7-425f-93ce-0ca26568128d.png">
+## Architecture Overview
+```
+.
+├── back/        # Express API, job runners, queue workers
+│   ├── src/
+│   │   ├── modules/   # Domain modules (auth, users, stations)
+│   │   ├── services/  # Business logic (Mongo, Redis, external APIs)
+│   │   ├── routes/    # Express routers
+│   │   ├── controllers/
+│   │   ├── utils/
+│   │   └── tests/     # Jest controller tests
+│   └── docker-compose.yml  # Mongo + Redis stack for local dev
+└── front/       # React Native Web application
+    ├── src/
+    │   ├── screens/   # Login, Register, Home, etc.
+    │   ├── Contexts/  # Auth context + persistence
+    │   ├── navigators/
+    │   └── types/
+    └── public/
+```
 
-**2.** Code the exercice.
+## Prerequisites
+- Node.js 18+
+- Yarn 1.x (classic)
+- MongoDB 4.4+ and Redis 6+ running locally
+- (Optional) Docker Desktop if you prefer to run services via `docker-compose`
 
-**3.** When you are done, send the link of your repository to your interviewer, while making sure he/she can access it.
+## Getting Started
 
-# ✋ Before you get started
+### 1. Environment variables
+Create `back/.env.development.local` with:
+```
+NODE_ENV=development
+PORT=3001
+DB_HOST=127.0.0.1
+DB_PORT=27017
+DB_DATABASE=velifind-dev
+SECRET_KEY=change-me
+LOG_FORMAT=combined
+LOG_DIR=./logs
+ORIGIN=http://localhost:3006
+REDIS_URL=redis://127.0.0.1:6379
+```
 
-### Required tech stack
+If you plan to run the frontend on a different origin, update `ORIGIN` and mirror it in `front/.env.local`:
+```
+REACT_APP_BACKEND_URL=http://localhost:3001
+```
 
-In order to run the project, there is a couple of technologies you need to install to your device.
+### 2. Supporting services
+- Local installs: start MongoDB (`mongod`) and Redis (`redis-server`).
+- Docker alternative (from `back/`):
+```
+docker-compose up -d
+```
+This launches MongoDB and Redis containers with default credentials.
 
-- [Node](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
-- [MongoDB](https://www.mongodb.com/docs/manual/installation/) and [Mongo Database Tools](https://www.mongodb.com/docs/database-tools/installation/installation/)
-- Redis
-- Npm or [Yarn](https://classic.yarnpkg.com/lang/en/docs/install/#mac-stable)
-- Typescript
+### 3. Install dependencies
+```
+yarn --cwd back install
+yarn --cwd front install
+```
 
-### How to run the Project ?
+### 4. Run the backend
+```
+NODE_ENV=development yarn --cwd back dev
+```
+- Serves the API at `http://localhost:3001`
+- Automatically restarts via Nodemon
+- Generates compiled output in `back/dist/` when you run `yarn --cwd back build`
 
-- Install both `front/` and `back/` packages using ➝ `npm install` or `yarn i`
-- Start back `npm run dev` or `yarn dev`
-- Start front `npm run web` or `yarn web`
+### 5. Run the frontend
+```
+PORT=3006 yarn --cwd front web
+```
+- Opens the React Native Web app on `http://localhost:3006`
+- Reuses the Auth context to call the backend login/signup endpoints
+- Native builds remain available through `yarn --cwd front ios` / `android`
 
-**Everything should now run smoothly, you are all set !**
+## Quality Assurance
+| Command | Description |
+|---------|-------------|
+| `yarn --cwd back test` | Runs Jest controller tests against mocked services |
+| `CI=true yarn --cwd front test --watchAll=false` | Executes web smoke tests for the React app |
+| `yarn --cwd back lint` | Lints API code with ESLint/TypeScript |
+| `yarn --cwd front lint` | Lints React Native Web code |
 
-# 📝 Brief
+## Data Flow
+1. A cron job inside `back/src/modules` fetches Velib station data every two minutes and stores snapshots in MongoDB.
+2. Redis handles background queues (e.g., caching, task scheduling) through BullMQ.
+3. The frontend uses Axios with interceptors via `front/src/Contexts/AuthContext.tsx` to attach JWT tokens to requests.
+4. Pagination and filtering logic lives inside the API service layer, minimizing payload size for the client.
 
-The project is to finish the creation of an application that will allow its users to check Velib bikes statuses available in Paris in order to easily get home from work (and vice-versa).
-The project was started by another developer who already took care of preparing database models and API endpoints for you to use and improve on, based on the front-end implementation requirements.
+## Deployment Notes
+- Backend: build with `yarn --cwd back build` and run `node back/dist/server.js`. PM2 configs live in `back/ecosystem.config.js`.
+- Frontend: `yarn --cwd front build` produces a CRA bundle under `front/build/` ready for static hosting.
+- Remember to set production environment variables (Mongo connection string, Redis URL, JWT secret) in the target infrastructure.
 
-Your goal will be to **discover the architecture**, **implement the front-end**, and **make any back-end changes** required to fulfill the user stories listed below.
+## Contributing
+1. Fork the repository or create a feature branch.
+2. Ensure tests and linters pass for both `back` and `front` workspaces.
+3. Submit a pull request describing the feature or fix, and reference any related issues or tickets.
 
-# ☑️ Tasks
+## Troubleshooting
+- **Cannot connect to Mongo/Redis**: verify services are running, or adjust `DB_HOST` / `REDIS_URL`.
+- **Authentication fails**: confirm `SECRET_KEY` matches between server instances and tokens are not stale.
+- **React Native Web build errors**: run `yarn --cwd front test` to surface missing mocks, especially when importing native modules.
+- **Outdated Velib data**: ensure the cron worker is running and check logs under `back/src/logs`.
 
-## 🚴 User stories
-
-1. As a user I should be able to **register**, **log-in** and **log-out** in order to **access and use the application**.
-2. As a user I should be able to get displayed a **list of stations** with any **relevant details** in order to know **how many bikes are available** for each of them.
-3. As a user I should be able to **search** through the list of stations **by name**, in order to check its available bikes.
-4. As a user, I should be able to **click on a button that filters the list of stations that have available bikes by types** (electrical or manual), in order to easily get displayed stations with available bikes of my prefered type.
-
-## ℹ️ Informations
-
-- The API endpoint in the `back/` folder uses the [Velib' Open Data API](https://www.velib-metropole.fr/donnees-open-data-gbfs-du-service-velib-metropole) to fill the database via a cron job. The station statuses are updated **every 2 minutes**.
-- The repository should already include everything needed to fulfill the tasks, but you are free to add any additional libraries that you might find useful to complete the assignement.
-
-## 🛠️ Requirements
-
-> :warning: The code needs to be written in Typescript !
-
-> :warning: The code needs to use [react-native-web](https://necolas.github.io/react-native-web/) components. All components should be functional and their props typed.
-
-- The application produced should work on **web** and be **responsive**. It is not required to run the project on native mobile (ios / android).
-- There should be an implementation of a **state management system**.
-- The list of stations should be displayed as an **infinite or a paginated list**.
-- User login informations should be **persisted** client side.
-- The station list bikes availability status should be **re-fetched and updated automatically at frequent intervals**.
-- Make it look good, and have fun with it 😊
-
----
-
-### All **informations** about this exercise should have been provided in this **README**, but if you have any questions, feel free to contact us!
+## License
+This repository is provided for interview and evaluation purposes. Contact the maintainers for reuse beyond assessment.

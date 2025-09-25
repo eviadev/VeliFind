@@ -1,133 +1,108 @@
-import bcrypt from 'bcrypt';
-import mongoose from 'mongoose';
-import request from 'supertest';
-import App from '../app';
+import { NextFunction, Request, Response } from 'express';
+import UsersController from '@controllers/users.controller';
 import { CreateUserDto } from '@dtos/users.dto';
-import UsersRoute from '@routes/users.route';
+import { User } from '@interfaces/users.interface';
 
-afterAll(async () => {
-  await new Promise<void>(resolve => setTimeout(() => resolve(), 500));
-});
+const createMockResponse = () => {
+  const res: Partial<Response> = {};
+  res.status = jest.fn().mockReturnValue(res);
+  res.json = jest.fn().mockReturnValue(res);
+  return res as Response;
+};
 
-describe('Testing Users', () => {
-  describe('[GET] /users', () => {
-    it('response fineAll Users', async () => {
-      const usersRoute = new UsersRoute();
-      const users = usersRoute.usersController.userService.users;
+const createMockNext = () => jest.fn() as NextFunction;
 
-      users.find = jest.fn().mockReturnValue([
-        {
-          _id: 'qpwoeiruty',
-          email: 'a@email.com',
-          password: await bcrypt.hash('q1w2e3r4!', 10),
-        },
-        {
-          _id: 'alskdjfhg',
-          email: 'b@email.com',
-          password: await bcrypt.hash('a1s2d3f4!', 10),
-        },
-        {
-          _id: 'zmxncbv',
-          email: 'c@email.com',
-          password: await bcrypt.hash('z1x2c3v4!', 10),
-        },
-      ]);
+describe('UsersController', () => {
+  let controller: UsersController;
 
-      (mongoose as any).connect = jest.fn();
-      const app = new App([usersRoute]);
-      return request(app.getServer()).get(`${usersRoute.path}`).expect(200);
+  beforeEach(() => {
+    controller = new UsersController();
+  });
+
+  describe('getUsers', () => {
+    it('responds with all users', async () => {
+      const users: User[] = [{ _id: '1', email: 'a@email.com', password: 'hashed' }];
+      const res = createMockResponse();
+      const next = createMockNext();
+
+      const serviceSpy = jest.spyOn(controller.userService, 'findAllUser').mockResolvedValue(users);
+
+      await controller.getUsers({} as Request, res, next);
+
+      expect(serviceSpy).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ data: users, message: 'findAll' });
+      expect(next).not.toHaveBeenCalled();
     });
   });
 
-  describe('[GET] /users/:id', () => {
-    it('response findOne User', async () => {
-      const userId = 'qpwoeiruty';
+  describe('getUserById', () => {
+    it('responds with the requested user', async () => {
+      const user: User = { _id: '42', email: 'user@email.com', password: 'hashed' };
+      const res = createMockResponse();
+      const next = createMockNext();
 
-      const usersRoute = new UsersRoute();
-      const users = usersRoute.usersController.userService.users;
+      const serviceSpy = jest.spyOn(controller.userService, 'findUserById').mockResolvedValue(user);
 
-      users.findOne = jest.fn().mockReturnValue({
-        _id: 'qpwoeiruty',
-        email: 'a@email.com',
-        password: await bcrypt.hash('q1w2e3r4!', 10),
-      });
+      await controller.getUserById({ params: { id: user._id } } as unknown as Request, res, next);
 
-      (mongoose as any).connect = jest.fn();
-      const app = new App([usersRoute]);
-      return request(app.getServer()).get(`${usersRoute.path}/${userId}`).expect(200);
+      expect(serviceSpy).toHaveBeenCalledWith(user._id);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ data: user, message: 'findOne' });
+      expect(next).not.toHaveBeenCalled();
     });
   });
 
-  describe('[POST] /users', () => {
-    it('response Create User', async () => {
-      const userData: CreateUserDto = {
-        email: 'test@email.com',
-        password: 'q1w2e3r4',
-      };
+  describe('createUser', () => {
+    it('creates and returns a user', async () => {
+      const payload: CreateUserDto = { email: 'new@email.com', password: 'secret' };
+      const created: User = { _id: 'abc', email: payload.email, password: 'hashed' };
+      const res = createMockResponse();
+      const next = createMockNext();
 
-      const usersRoute = new UsersRoute();
-      const users = usersRoute.usersController.userService.users;
+      const serviceSpy = jest.spyOn(controller.userService, 'createUser').mockResolvedValue(created);
 
-      users.findOne = jest.fn().mockReturnValue(null);
-      users.create = jest.fn().mockReturnValue({
-        _id: '60706478aad6c9ad19a31c84',
-        email: userData.email,
-        password: await bcrypt.hash(userData.password, 10),
-      });
+      await controller.createUser({ body: payload } as Request, res, next);
 
-      (mongoose as any).connect = jest.fn();
-      const app = new App([usersRoute]);
-      return request(app.getServer()).post(`${usersRoute.path}`).send(userData).expect(201);
+      expect(serviceSpy).toHaveBeenCalledWith(payload);
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith({ data: created, message: 'created' });
+      expect(next).not.toHaveBeenCalled();
     });
   });
 
-  describe('[PUT] /users/:id', () => {
-    it('response Update User', async () => {
-      const userId = '60706478aad6c9ad19a31c84';
-      const userData: CreateUserDto = {
-        email: 'test@email.com',
-        password: 'q1w2e3r4',
-      };
+  describe('updateUser', () => {
+    it('updates and returns the user', async () => {
+      const payload: CreateUserDto = { email: 'updated@email.com', password: 'secret' };
+      const updated: User = { _id: 'abc', email: payload.email, password: 'hashed' };
+      const res = createMockResponse();
+      const next = createMockNext();
 
-      const usersRoute = new UsersRoute();
-      const users = usersRoute.usersController.userService.users;
+      const serviceSpy = jest.spyOn(controller.userService, 'updateUser').mockResolvedValue(updated);
 
-      if (userData.email) {
-        users.findOne = jest.fn().mockReturnValue({
-          _id: userId,
-          email: userData.email,
-          password: await bcrypt.hash(userData.password, 10),
-        });
-      }
+      await controller.updateUser({ params: { id: 'abc' }, body: payload } as unknown as Request, res, next);
 
-      users.findByIdAndUpdate = jest.fn().mockReturnValue({
-        _id: userId,
-        email: userData.email,
-        password: await bcrypt.hash(userData.password, 10),
-      });
-
-      (mongoose as any).connect = jest.fn();
-      const app = new App([usersRoute]);
-      return request(app.getServer()).put(`${usersRoute.path}/${userId}`).send(userData);
+      expect(serviceSpy).toHaveBeenCalledWith('abc', payload);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ data: updated, message: 'updated' });
+      expect(next).not.toHaveBeenCalled();
     });
   });
 
-  describe('[DELETE] /users/:id', () => {
-    it('response Delete User', async () => {
-      const userId = '60706478aad6c9ad19a31c84';
+  describe('deleteUser', () => {
+    it('removes and returns the user', async () => {
+      const deleted: User = { _id: 'abc', email: 'delete@email.com', password: 'hashed' };
+      const res = createMockResponse();
+      const next = createMockNext();
 
-      const usersRoute = new UsersRoute();
-      const users = usersRoute.usersController.userService.users;
+      const serviceSpy = jest.spyOn(controller.userService, 'deleteUser').mockResolvedValue(deleted);
 
-      users.findByIdAndDelete = jest.fn().mockReturnValue({
-        _id: '60706478aad6c9ad19a31c84',
-        email: 'test@email.com',
-        password: await bcrypt.hash('q1w2e3r4!', 10),
-      });
+      await controller.deleteUser({ params: { id: 'abc' } } as unknown as Request, res, next);
 
-      (mongoose as any).connect = jest.fn();
-      const app = new App([usersRoute]);
-      return request(app.getServer()).delete(`${usersRoute.path}/${userId}`).expect(200);
+      expect(serviceSpy).toHaveBeenCalledWith('abc');
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ data: deleted, message: 'deleted' });
+      expect(next).not.toHaveBeenCalled();
     });
   });
 });

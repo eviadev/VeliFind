@@ -9,6 +9,8 @@ import userModel from '@models/users.model';
 import { isEmpty } from '@utils/util';
 
 class AuthService {
+  public users = userModel;
+
   public async signup(userData: CreateUserDto): Promise<AuthUserData> {
     if (isEmpty(userData)) throw new HttpException(400, 'userData is empty');
 

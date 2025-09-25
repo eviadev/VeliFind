@@ -1,18 +1,21 @@
-import request from 'supertest';
-import App from '@/app';
-import IndexRoute from '@routes/index.route';
+import { Request, Response } from 'express';
+import IndexController from '@controllers/index.controller';
 
-afterAll(async () => {
-  await new Promise<void>(resolve => setTimeout(() => resolve(), 500));
-});
+const createMockResponse = () => {
+  const res: Partial<Response> = {};
+  res.sendStatus = jest.fn();
+  return res as Response;
+};
 
-describe('Testing Index', () => {
-  describe('[GET] /', () => {
-    it('response statusCode 200', () => {
-      const indexRoute = new IndexRoute();
-      const app = new App([indexRoute]);
+describe('IndexController', () => {
+  it('sends a 200 status', () => {
+    const controller = new IndexController();
+    const res = createMockResponse();
+    const next = jest.fn();
 
-      return request(app.getServer()).get(`${indexRoute.path}`).expect(200);
-    });
+    controller.index({} as Request, res, next);
+
+    expect(res.sendStatus).toHaveBeenCalledWith(200);
+    expect(next).not.toHaveBeenCalled();
   });
 });

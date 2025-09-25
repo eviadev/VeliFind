@@ -1,60 +1,82 @@
-import bcrypt from 'bcrypt';
-import mongoose from 'mongoose';
-import request from 'supertest';
-import App from '@app';
+import { NextFunction, Request, Response } from 'express';
+import AuthController from '@controllers/auth.controller';
 import { CreateUserDto } from '@dtos/users.dto';
-import AuthRoute from '@routes/auth.route';
+import { AuthUserData } from '@interfaces/auth.interface';
 
-afterAll(async () => {
-  await new Promise<void>(resolve => setTimeout(() => resolve(), 500));
-});
+const createMockResponse = () => {
+  const res: Partial<Response> = {};
+  res.status = jest.fn().mockReturnValue(res);
+  res.json = jest.fn().mockReturnValue(res);
+  res.setHeader = jest.fn();
+  return res as Response;
+};
 
-describe('Testing Auth', () => {
-  describe('[POST] /signup', () => {
-    it('response should have the Create userData', async () => {
-      const userData: CreateUserDto = {
-        email: 'test@email.com',
-        password: 'q1w2e3r4!',
+const createMockNext = () => jest.fn() as NextFunction;
+
+describe('AuthController', () => {
+  let controller: AuthController;
+
+  beforeEach(() => {
+    controller = new AuthController();
+  });
+
+  describe('signUp', () => {
+    it('returns the created user with token data', async () => {
+      const payload: CreateUserDto = { email: 'signup@email.com', password: 'secret' };
+      const authData: AuthUserData = {
+        cookie: 'cookie=value',
+        authToken: { token: 'token', expiresIn: 123 },
+        user: { _id: 'uid', email: payload.email },
       };
+      const res = createMockResponse();
+      const next = createMockNext();
 
-      const authRoute = new AuthRoute();
-      const users = authRoute.authController.authService.users;
+      const serviceSpy = jest.spyOn(controller.authService, 'signup').mockResolvedValue(authData);
 
-      users.findOne = jest.fn().mockReturnValue(null);
-      users.create = jest.fn().mockReturnValue({
-        _id: '60706478aad6c9ad19a31c84',
-        email: userData.email,
-        password: await bcrypt.hash(userData.password, 10),
-      });
+      await controller.signUp({ body: payload } as Request, res, next);
 
-      (mongoose as any).connect = jest.fn();
-      const app = new App([authRoute]);
-      return request(app.getServer()).post(`${authRoute.path}signup`).send(userData);
+      expect(serviceSpy).toHaveBeenCalledWith(payload);
+      expect(res.setHeader).toHaveBeenCalledWith('Auth-Cookie', [authData.cookie]);
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith({ data: authData.user, authToken: authData.authToken, message: 'signup' });
+      expect(next).not.toHaveBeenCalled();
     });
   });
 
-  describe('[POST] /login', () => {
-    it('response should have the Set-Cookie header with the Authorization token', async () => {
-      const userData: CreateUserDto = {
-        email: 'test@email.com',
-        password: 'q1w2e3r4!',
+  describe('logIn', () => {
+    it('returns the logged in user with token data', async () => {
+      const payload: CreateUserDto = { email: 'login@email.com', password: 'secret' };
+      const authData: AuthUserData = {
+        cookie: 'cookie=value',
+        authToken: { token: 'token', expiresIn: 123 },
+        user: { _id: 'uid', email: payload.email },
       };
+      const res = createMockResponse();
+      const next = createMockNext();
 
-      const authRoute = new AuthRoute();
-      const users = authRoute.authController.authService.users;
+      const serviceSpy = jest.spyOn(controller.authService, 'login').mockResolvedValue(authData);
 
-      users.findOne = jest.fn().mockReturnValue({
-        _id: '60706478aad6c9ad19a31c84',
-        email: userData.email,
-        password: await bcrypt.hash(userData.password, 10),
-      });
+      await controller.logIn({ body: payload } as Request, res, next);
 
-      (mongoose as any).connect = jest.fn();
-      const app = new App([authRoute]);
-      return request(app.getServer())
-        .post(`${authRoute.path}login`)
-        .send(userData)
-        .expect('Set-Cookie', /^Authorization=.+/);
+      expect(serviceSpy).toHaveBeenCalledWith(payload);
+      expect(res.setHeader).toHaveBeenCalledWith('Auth-Cookie', [authData.cookie]);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ data: authData.user, authToken: authData.authToken, message: 'login' });
+      expect(next).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('logOut', () => {
+    it('clears the auth cookie', async () => {
+      const res = createMockResponse();
+      const next = createMockNext();
+
+      await controller.logOut({} as any, res, next);
+
+      expect(res.setHeader).toHaveBeenCalledWith('Auth-Cookie', ['Authorization=; Max-age=0']);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ message: 'logout' });
+      expect(next).not.toHaveBeenCalled();
     });
   });
 });
