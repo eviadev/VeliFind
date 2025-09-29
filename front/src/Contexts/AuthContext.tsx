@@ -1,118 +1,177 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import axios from "axios";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { FC, ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import apiClient from '../lib/apiClient';
 
-/* eslint-disable */
-interface AuthProps {
-  authState?: { token: string | null; authenticated: boolean | null };
-  onRegister?: (email: string, password: string) => Promise<void>;
-  onLogin?: (email: string, password: string) => Promise<void>;
-  onLogout?: () => Promise<void>;
-}
+const TOKEN_KEY = 'velifind-auth-token';
 
-
-const TOKEN_KEY = "my-jwt";
-export const API_URL = "http://localhost:3001";
-const AuthContext = createContext<AuthProps>({});
-
-export const useAuth = () => {
-  return useContext(AuthContext);
+type AuthState = {
+  token: string | null;
+  authenticated: boolean;
 };
 
-export const AuthProvider = ({ children }: any) => {
-  const [authState, setAuthState] = useState<{
-    token: string | null;
-    authenticated: boolean | null;
-  }>({
-    token: null,
-    authenticated: null,
-  });
+type AuthSuccess = { success: true };
+type AuthFailure = { success: false; message: string };
+export type AuthResult = AuthSuccess | AuthFailure;
+
+type AuthContextValue = {
+  authState: AuthState;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<AuthResult>;
+  register: (email: string, password: string) => Promise<AuthResult>;
+  logout: () => Promise<void>;
+};
+
+type AuthResponse = {
+  data: {
+    _id: string;
+    email: string;
+  };
+  authToken: {
+    token: string;
+    expiresIn: number;
+  };
+};
+
+const initialState: AuthState = {
+  token: null,
+  authenticated: false,
+};
+
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+const getErrorMessage = (error: unknown): string => {
+  if (typeof window !== 'undefined' && window.navigator && !window.navigator.onLine) {
+    return 'You appear to be offline. Please check your connection and try again.';
+  }
+
+  if (typeof error === 'object' && error !== null && 'response' in error) {
+    const response = (error as { response?: { data?: { msg?: string; message?: string }; status?: number } }).response;
+
+    if (response?.data?.msg) {
+      return response.data.msg;
+    }
+
+    if (response?.data?.message) {
+      return response.data.message;
+    }
+  }
+
+  return 'We could not complete your request. Please try again.';
+};
+
+export const useAuth = (): AuthContextValue => {
+  const context = useContext(AuthContext);
+
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+
+  return context;
+};
+
+const persistSession = (token: string) => {
+  if (typeof window !== 'undefined') {
+    try {
+      window.localStorage.setItem(TOKEN_KEY, token);
+    } catch (storageError) {
+      console.warn('Unable to persist session token', storageError);
+    }
+  }
+
+  apiClient.defaults.headers.common.Authorization = `Bearer ${token}`;
+};
+
+const clearSession = () => {
+  if (typeof window !== 'undefined') {
+    try {
+      window.localStorage.removeItem(TOKEN_KEY);
+    } catch (storageError) {
+      console.warn('Unable to clear stored session token', storageError);
+    }
+  }
+
+  delete apiClient.defaults.headers.common.Authorization;
+};
+
+const extractAuthToken = (payload: AuthResponse): string => {
+  const token = payload.authToken?.token;
+
+  if (!token) {
+    throw new Error('Authentication token missing from server response');
+  }
+
+  return token;
+};
+
+export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
+  const [authState, setAuthState] = useState<AuthState>(initialState);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadToken = async () => {
+    if (typeof window !== 'undefined') {
       try {
-        const token = await AsyncStorage.getItem(TOKEN_KEY);
-        console.log("stored:", token);
-        if (token) {
-          axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        const existingToken = window.localStorage.getItem(TOKEN_KEY);
 
-          setAuthState({
-            token: token,
-            authenticated: true,
-          });
+        if (existingToken) {
+          persistSession(existingToken);
+          setAuthState({ token: existingToken, authenticated: true });
         }
-      } catch (error) {
-        console.error('Error loading token from AsyncStorage:', error);
+      } catch (storageError) {
+        console.warn('Unable to read stored session token', storageError);
       }
-    };
-    loadToken();
+    }
+    setIsLoading(false);
   }, []);
 
-
-  const register = async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string): Promise<AuthResult> => {
     try {
-      return await axios.post(`${API_URL}/signup`, { email, password });
-    } catch (e) {
-      return { error: true, msg: (e as any).response.data.msg };
-    }
-  };
+      const { data } = await apiClient.post<AuthResponse>('/login', { email, password });
+      const token = extractAuthToken(data);
 
-  const login = async (email: string, password: string) => {
-    try {
-      const result = await axios.post(`${API_URL}/login`, { email, password });
-      console.log('Starting login process...');
-      if (result && result.data && result.data.authToken) {
-        setAuthState({
-          token: result.data.authToken.token,
-          authenticated: true,
-        });
+      persistSession(token);
+      setAuthState({ token, authenticated: true });
 
-        axios.defaults.headers.common['Authorization'] = `Bearer ${result.data.authToken.token}`;
-
-        try {
-          await AsyncStorage.setItem(TOKEN_KEY, result.data.authToken.token);
-        } catch (error) {
-          console.error('Error saving token to AsyncStorage:', error);
-        }
-        console.log('Login successful:', result);
-        return result;
-      } else {
-        console.error("Login response is missing 'authToken' property:", result);
-        return { error: true, msg: 'Invalid response from server during login.' };
-      }
+      return { success: true };
     } catch (error) {
-      console.error('Login Error:', error);
-      return { error: true, msg: 'An error occurred during login.' };
+      return { success: false, message: getErrorMessage(error) };
     }
-  };
+  }, []);
 
-
-
-  const logout = async () => {
-    // Delete token from storage
+  const register = useCallback(async (email: string, password: string): Promise<AuthResult> => {
     try {
-      await AsyncStorage.removeItem(TOKEN_KEY);
+      const { data } = await apiClient.post<AuthResponse>('/signup', { email, password });
+      const token = extractAuthToken(data);
+
+      persistSession(token);
+      setAuthState({ token, authenticated: true });
+
+      return { success: true };
     } catch (error) {
-      console.error('Error removing token from AsyncStorage:', error);
+      return { success: false, message: getErrorMessage(error) };
     }
+  }, []);
 
-    // Update HTTP Headers
-    axios.defaults.headers.common["Authorization"] = "";
+  const logout = useCallback(async () => {
+    try {
+      await apiClient.post('/logout');
+    } catch (error) {
+      console.warn('Failed to notify server about logout', error);
+    } finally {
+      clearSession();
+      setAuthState(initialState);
+    }
+  }, []);
 
-    // Reset auth state
-    setAuthState({
-      token: null,
-      authenticated: false,
-    });
-  };
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      authState,
+      isLoading,
+      login,
+      register,
+      logout,
+    }),
+    [authState, isLoading, login, logout, register],
+  );
 
-  const value = {
-    onRegister: register,
-    onLogin: login,
-    onLogout: logout,
-    authState,
-  };
-
-  // @ts-ignore
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

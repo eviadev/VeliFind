@@ -82,19 +82,20 @@ NODE_ENV=development yarn --cwd back dev
 
 ### 5. Run the frontend
 ```
-PORT=3006 yarn --cwd front web
+cd front
+yarn start
 ```
-- Opens the React Native Web app on `http://localhost:3006`
-- Reuses the Auth context to call the backend login/signup endpoints
-- Native builds remain available through `yarn --cwd front ios` / `android`
+- Launches the React web client on `http://localhost:3000` (set `PORT=3006` if you prefer a different port)
+- Uses the shared Auth context to talk to the backend login/signup endpoints
 
 ## Quality Assurance
 | Command | Description |
 |---------|-------------|
 | `yarn --cwd back test` | Runs Jest controller tests against mocked services |
-| `CI=true yarn --cwd front test --watchAll=false` | Executes web smoke tests for the React app |
+| `CI=true yarn --cwd front test --watchAll=false` | Executes React Testing Library smoke tests for the web client |
 | `yarn --cwd back lint` | Lints API code with ESLint/TypeScript |
-| `yarn --cwd front lint` | Lints React Native Web code |
+| `yarn --cwd front lint` | Lints the React web codebase |
+| `yarn --cwd front type-check` | Validates the frontend with strict TypeScript settings |
 
 ## Data Flow
 1. A cron job inside `back/src/modules` fetches Velib station data every two minutes and stores snapshots in MongoDB.
@@ -107,11 +108,6 @@ PORT=3006 yarn --cwd front web
 - Frontend: `yarn --cwd front build` produces a CRA bundle under `front/build/` ready for static hosting.
 - Remember to set production environment variables (Mongo connection string, Redis URL, JWT secret) in the target infrastructure.
 
-## Contributing
-1. Fork the repository or create a feature branch.
-2. Ensure tests and linters pass for both `back` and `front` workspaces.
-3. Submit a pull request describing the feature or fix, and reference any related issues or tickets.
-
 ## Troubleshooting
 - **Cannot connect to Mongo/Redis**: verify services are running, or adjust `DB_HOST` / `REDIS_URL`.
 - **Authentication fails**: confirm `SECRET_KEY` matches between server instances and tokens are not stale.
@@ -119,4 +115,4 @@ PORT=3006 yarn --cwd front web
 - **Outdated Velib data**: ensure the cron worker is running and check logs under `back/src/logs`.
 
 ## License
-This repository is provided for interview and evaluation purposes. Contact the maintainers for reuse beyond assessment.
+This repository is provided for education purposes. Contact the maintainers for reuse beyond assessment.

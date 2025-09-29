@@ -1,76 +1,76 @@
-import { useState} from "react";
-import {View, Text, TextInput, StyleSheet} from "react-native";
-import { useAuth} from "../Contexts/AuthContext";
-import StyledButton from "../components/StyledButton";
+import { useState } from 'react';
+import type { FC, FormEvent } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../Contexts/AuthContext';
 
-export const Register = ({ navigation }) => {
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const { onRegister } = useAuth();
+export const Register: FC = () => {
+  const navigate = useNavigate();
+  const { register } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const register = async () => {
-    const result = await onRegister!(email, password);
-    if (result && result.error) {
-      alert(result.msg);
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+
+    const result = await register(email, password);
+
+    if (result.success) {
+      navigate('/');
+      return;
     }
-  };
 
-  const handleRedirect = () => {
-    navigation.navigate("Login");
+    setError(result.message);
+    setIsSubmitting(false);
   };
 
   return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Register</Text>
-        <View style={styles.formContainer}>
-          <TextInput
-              style={styles.input}
-              placeholder="Email"
+    <div className="d-flex align-items-center justify-content-center min-vh-100 bg-light">
+      <div className="card shadow-sm p-4" style={{ maxWidth: '420px', width: '100%' }}>
+        <h1 className="h3 fw-semibold text-center mb-4">Create your account</h1>
+        <form className="d-grid gap-3" onSubmit={handleSubmit} noValidate>
+          <div>
+            <label className="form-label" htmlFor="email">
+              Email address
+            </label>
+            <input
+              autoComplete="email"
+              className="form-control"
+              id="email"
+              onChange={event => setEmail(event.target.value)}
+              placeholder="you@example.com"
+              required
+              type="email"
               value={email}
-              onChangeText={(text: string) => setEmail(text)}
-          />
-          <TextInput
-              style={styles.input}
-              placeholder="Password"
-              secureTextEntry
+            />
+          </div>
+          <div>
+            <label className="form-label" htmlFor="password">
+              Password
+            </label>
+            <input
+              autoComplete="new-password"
+              className="form-control"
+              id="password"
+              minLength={6}
+              onChange={event => setPassword(event.target.value)}
+              required
+              type="password"
               value={password}
-              onChangeText={(text: string) => setPassword(text)}
-          />
-          <View style={styles.buttonsDiv}>
-            <StyledButton onPress={handleRedirect} style={styles.button}>Sign in</StyledButton>
-            <StyledButton onPress={register} style={styles.button}>Create account</StyledButton>
-          </View>
-        </View>
-      </View>
+            />
+          </div>
+          {error && <div className="alert alert-danger mb-0">{error}</div>}
+          <button className="btn btn-success w-100" disabled={isSubmitting} type="submit">
+            {isSubmitting ? 'Creating account…' : 'Create account'}
+          </button>
+        </form>
+        <p className="text-center mt-3 mb-0">
+          Already have an account? <Link to="/login">Sign in</Link>
+        </p>
+      </div>
+    </div>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 16,
-  },
-  title: {
-    fontSize: 24,
-    marginBottom: 16,
-  },
-  input: {
-    height: 40,
-    width: "100%",
-    borderColor: "gray",
-    borderWidth: 1,
-    marginBottom: 16,
-    padding: 8,
-  },
-  formContainer: {
-    display: "flex",
-    justifyContent: "center",
-    width: 280,
-  },
-  buttonsDiv: {
-    gap: 15,
-    flexDirection: "row"
-  }
-});
