@@ -13,7 +13,7 @@ describe('App routing', () => {
       </MemoryRouter>,
     );
 
-    const heading = await screen.findByRole('heading', { name: /sign in to velifind/i });
+    const heading = await screen.findByRole('heading', { name: /connectez-vous à velifind/i });
     expect(heading).toBeInTheDocument();
   });
 });

@@ -41,7 +41,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const getErrorMessage = (error: unknown): string => {
   if (typeof window !== 'undefined' && window.navigator && !window.navigator.onLine) {
-    return 'You appear to be offline. Please check your connection and try again.';
+    return 'Vous semblez hors ligne. Vérifiez votre connexion et réessayez.';
   }
 
   if (typeof error === 'object' && error !== null && 'response' in error) {
@@ -56,7 +56,7 @@ const getErrorMessage = (error: unknown): string => {
     }
   }
 
-  return 'We could not complete your request. Please try again.';
+  return 'Nous n\'avons pas pu traiter votre demande. Merci de réessayer.';
 };
 
 export const useAuth = (): AuthContextValue => {
@@ -74,7 +74,7 @@ const persistSession = (token: string) => {
     try {
       window.localStorage.setItem(TOKEN_KEY, token);
     } catch (storageError) {
-      console.warn('Unable to persist session token', storageError);
+      console.warn('Impossible d\'enregistrer le jeton de session', storageError);
     }
   }
 
@@ -86,7 +86,7 @@ const clearSession = () => {
     try {
       window.localStorage.removeItem(TOKEN_KEY);
     } catch (storageError) {
-      console.warn('Unable to clear stored session token', storageError);
+      console.warn('Impossible de supprimer le jeton de session stocké', storageError);
     }
   }
 
@@ -97,7 +97,7 @@ const extractAuthToken = (payload: AuthResponse): string => {
   const token = payload.authToken?.token;
 
   if (!token) {
-    throw new Error('Authentication token missing from server response');
+    throw new Error('Le jeton d\'authentification est absent de la réponse du serveur');
   }
 
   return token;
@@ -117,7 +117,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           setAuthState({ token: existingToken, authenticated: true });
         }
       } catch (storageError) {
-        console.warn('Unable to read stored session token', storageError);
+        console.warn('Impossible de lire le jeton de session stocké', storageError);
       }
     }
     setIsLoading(false);
@@ -155,7 +155,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     try {
       await apiClient.post('/logout');
     } catch (error) {
-      console.warn('Failed to notify server about logout', error);
+      console.warn('Impossible d\'informer le serveur de la déconnexion', error);
     } finally {
       clearSession();
       setAuthState(initialState);

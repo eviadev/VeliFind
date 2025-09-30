@@ -29,10 +29,10 @@ const LoadingState: FC = () => {
   return (
     <div className="d-flex vh-100 justify-content-center align-items-center">
       <div className="text-center">
-        <div className="spinner-border text-primary mb-3" role="status">
-          <span className="visually-hidden">Loading...</span>
+        <div className="spinner-border text-eco mb-3" role="status">
+          <span className="visually-hidden">Chargement...</span>
         </div>
-        <p className="text-muted">Preparing your experience...</p>
+        <p className="text-eco-dark">Préparation de votre expérience...</p>
       </div>
     </div>
   );
