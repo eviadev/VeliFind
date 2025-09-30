@@ -1,4 +1,4 @@
-![VeliFind mockup preview](./Velifind-mockup.png)
+<img src="./Velifind-mockup.png" alt="VeliFind mockup preview" width="600" />
 
 # VeliFind
 
