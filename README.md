@@ -1,3 +1,5 @@
+![VeliFind mockup preview](./Velifind-mockup.png)
+
 # VeliFind
 
 VeliFind is a full-stack Velib companion that helps riders check bike availability across Paris. The project combines a REST API (Node.js/Express/MongoDB/Redis) with a React Native Web client so users can register, authenticate, and browse stations from any browser.
